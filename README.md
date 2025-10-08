@@ -8,7 +8,7 @@ If you don't have access to the Magick++ headers, there is a version that genera
 
 ## Prerequisites
 
-You need to have ImageMagick installed on your system, and the Magick++ headers. Linux: `sudo apt install imagemagick libmagick++-dev`
+You need to have ImageMagick installed on your system, and the Magick++ headers. Ubuntu: `sudo apt install imagemagick libmagick++-dev`
 
 `graphicsmagick-libmagick-dev-compat` will also work, however it is approximately the same speed (possibly a tiny bit slower) as `libmagick++-dev`. [GraphicsMagick](http://www.graphicsmagick.org/) is faster than ImageMagick for normal stuff, but here ImageMagick is only used to directly copy pixels to the image. If you prefer GraphicsMagick, you need to change `MAGICK_FLAGS` in the Makefile to `-lMagick++`.
 
@@ -18,11 +18,11 @@ Just run `make`. **IMPORTANT:** If you're using ImageMagick 7, you must remove `
 
 * If you compiled ImageMagick from source, you'll probably have to change `MAGICK_FLAGS` in the Makefile to have the include directory and link the Magick++ library, because `pkg-config` might not be able to find it.
 * If you are using Clang but encounter `/usr/bin/ld: cannot find -lomp: No such file or directory`, you're missing the OpenMP development package: `sudo apt install libomp-dev`. Clang was noticeably slower in my testing, so I recommend GCC.
-* `-march=native` is enabled by default for all versions. Remove it from the Makefile if you don't want it.
+* `-march=native` is enabled by default. Remove it from the Makefile if you don't want it.
 
 Optionally, you can increase float precision used when calculating: change `typedef float c_float;` to `typedef double c_float;`. Also remove `-ffast-math` from the Makefile in case float precision is really an issue.
 
-## Running (Linux)
+## Running
 
 `./mandelbrot.out <num_threads> <x_start> <x_end> <y_start> <y_end> <image_width> <image_height> <output_name> [<optional coloring file>]`
 
@@ -39,6 +39,10 @@ In my testing I discovered BMP images to be the fastest to make and AVIF to be t
 ![example2](example2.png)
 
 ![example3](example3.png)
+
+## Building (Windows)
+
+Only MSVC x64 is officially supported. Set your environment variables with `"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"`, run `build_win64.bat` to build, `"Debug/mandelbrot.exe"` to run. Note that the instruction set is SSE2 (the default) because MSVC does not have the equivalent of `-march=native`, so you should add the relevant `/arch` for your CPU if you want extra performance. Remove `/fp:fast` if float precision is really an issue. **IMPORTANT:** You will probably have to change the ImageMagick version. It's currently set to `ImageMagick-7.1.2-Q16-HDRI`, which is the current version and recommended setup as of writing. If you are using ImageMagick 6 (why), add `/DUSE_IM6`.
 
 ## Optional Coloring File
 
