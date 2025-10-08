@@ -5,8 +5,6 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <cstdint> //to be fancy with uint8_t vs uint16_t
-#include <limits> //for <cstdint>
 
 #include <cassert> //Magick++ makes its own assert (__assert_fail()), causes enkiTS to fail compilation
 #include <Magick++.h>
@@ -33,6 +31,22 @@ std::vector<std::pair<int, Magick::ColorRGB>> iterationColors = {
 	{ MAX_ITER, Magick::ColorRGB(0, 0, 0) } //black
 };
 //idea: option for linear interpolation for color boundaries
+
+#if defined(MANDELBROT_ITER_SMALL_VAL) && !defined(MANDELBROT_ITER_INCR)
+#pragma message("You defined MANDELBROT_ITER_SMALL_VAL without MANDELBROT_ITER_INCR, undefining now")
+#undef MANDELBROT_ITER_SMALL_VAL
+#elif !defined(MANDELBROT_ITER_SMALL_VAL) && defined(MANDELBROT_ITER_INCR)
+#pragma message("You defined MANDELBROT_ITER_INCR without MANDELBROT_ITER_SMALL_VAL, undefining now")
+#undef MANDELBROT_ITER_INCR
+#endif
+#if !defined(MANDELBROT_ITER_SMALL_VAL) && !defined(MANDELBROT_ITER_INCR)
+#define MANDELBROT_ITER_SMALL_VAL 0
+#define MANDELBROT_ITER_INCR 1
+//the default in the Makefile is 32 & 32
+#else
+static_assert(MANDELBROT_ITER_SMALL_VAL >= 0);
+static_assert(MANDELBROT_ITER_INCR >= 1);
+#endif
 
 void readColorFileAndSetColors(const std::string& filename) {
 	std::ifstream coloringFile;
@@ -147,9 +161,38 @@ void mandelbrot_helper(c_float x_start, c_float x_end, c_float y_start, c_float 
 			int iterations = 0;
 			std::complex<c_float> z = std::complex<c_float>(0, 0);
 			std::complex<c_float> c = std::complex<c_float>(pointX, pointY);
-			while (std::norm(z) < 2*2 && iterations < MAX_ITER) {
+			while (std::norm(z) < 2*2 && iterations < MANDELBROT_ITER_SMALL_VAL) {
 				z = z*z + c;
 				iterations++;
+			}
+			if (iterations == MANDELBROT_ITER_SMALL_VAL) {
+				std::complex<c_float> z_prev; //for winding back to get precise results
+				while (std::norm(z) < 2*2 && iterations < MAX_ITER) {
+					z_prev = z;
+					for (int k = 0; k < MANDELBROT_ITER_INCR; k++) {
+						//depends on the compiler to loop unroll
+						z = z*z + c;
+					}
+					iterations += MANDELBROT_ITER_INCR;
+				}
+
+				//wind back to fix overshooting
+				if constexpr (MANDELBROT_ITER_INCR > 1) {
+					iterations -= MANDELBROT_ITER_INCR;
+					z = z_prev;
+					while (std::norm(z) < 2*2 && iterations < MAX_ITER) {
+						z = z*z + c;
+						iterations++;
+					}
+
+					//this seems to get *slightly* worse performance (probably because division is slow):
+					/*
+					while (std::norm(z) >= 2*2) {
+						z = (z-c) / z;
+						iterations--;
+					}
+					*/
+				}
 			}
 
 			//color lookup

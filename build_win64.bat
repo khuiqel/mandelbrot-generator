@@ -7,7 +7,7 @@ setlocal
 @set INCLUDES=/I"C:\Program Files\ImageMagick-7.1.2-Q16-HDRI\include"
 @set SOURCES=main.cpp enkiTS/TaskScheduler.cpp
 @set LIBS="C:\Program Files\ImageMagick-7.1.2-Q16-HDRI\lib\CORE_RL_Magick++_.lib"
-@set DEFINES=
+@set DEFINES=/DMANDELBROT_ITER_SMALL_VAL=32 /DMANDELBROT_ITER_INCR=32
 
 if not exist "%OUT_DIR%" (
 	mkdir "%OUT_DIR%"
