@@ -226,7 +226,9 @@ void mandelbrot(int threadCount, c_float x_start, c_float x_end, c_float y_start
 
 	Magick::Image generated_image;
 	generated_image.size(Magick::Geometry(image_width, image_height));
-	//generated_image.type(Magick::TrueColorType);
+	#ifndef AUTO_BITDEPTH
+	generated_image.depth(8);
+	#endif
 	generated_image.modifyImage();
 	Magick::Pixels view(generated_image);
 	#ifdef USE_IM6
