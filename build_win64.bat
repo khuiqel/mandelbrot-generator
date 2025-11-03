@@ -13,6 +13,6 @@ if not exist "%OUT_DIR%" (
 	mkdir "%OUT_DIR%"
 )
 
-cl /std:c++20 /nologo /O2 /fp:fast %DEFINES% /MD /MP /utf-8 %INCLUDES% %SOURCES% /Fe%OUT_DIR%\%OUT_EXE%.exe /Fo%OUT_DIR%\ /link %LIBS%
+cl /std:c++20 /nologo /O2 %DEFINES% /MD /MP /utf-8 %INCLUDES% %SOURCES% /Fe%OUT_DIR%\%OUT_EXE%.exe /Fo%OUT_DIR%\ /link %LIBS%
 
 endlocal

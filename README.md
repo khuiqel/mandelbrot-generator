@@ -20,8 +20,9 @@ Just run `make`. **IMPORTANT:** If you're using ImageMagick 7, you must remove `
 * If you are using Clang but encounter `/usr/bin/ld: cannot find -lomp: No such file or directory`, you're missing the OpenMP development package: `sudo apt install libomp-dev`. Clang was noticeably slower in my testing, so I recommend GCC.
 * `-march=native` is enabled by default. Remove it from the Makefile if you don't want it.
 * There are some `#define`s available to slightly tune the core loop if you so desire: `MANDELBROT_ITER_SMALL_VAL` determines how long to do precise iterations, and `MANDELBROT_ITER_INCR` determines how many iterations to do at once after that (to take advantage of CPUs' long pipelines before jumping back to the start of the loop). Changing these will result in an identical image, so don't worry about playing around.
+* Optionally, you can increase float precision used when calculating: change `typedef float c_float;` to `typedef double c_float;`.
 
-Optionally, you can increase float precision used when calculating: change `typedef float c_float;` to `typedef double c_float;`. Also remove `-ffast-math` from the Makefile in case float precision is really an issue.
+By default, `-ffast-math` is enabled because the images produced look extremely similar. However, the results are "incorrect" because of this. If it's enough to bother you, remove it from the Makefile.
 
 ## Running
 
@@ -43,7 +44,9 @@ In my testing I discovered BMP images to be the fastest to make and AVIF to be t
 
 ## Building (Windows)
 
-Only MSVC x64 is officially supported. Set your environment variables with `"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"`, run `build_win64.bat` to build, `"Debug/mandelbrot.exe"` to run. Note that the instruction set is SSE2 (the default) because MSVC does not have the equivalent of `-march=native`, so you should add the relevant `/arch` for your CPU if you want extra performance. Remove `/fp:fast` if float precision is really an issue. **IMPORTANT:** You will probably have to change the ImageMagick version. It's currently set to `ImageMagick-7.1.2-Q16-HDRI`, which is the current version and recommended setup as of writing. If you are using ImageMagick 6 (why), add `/DUSE_IM6`.
+Only MSVC x64 is officially supported. Set your environment variables with `"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"`, run `build_win64.bat` to build, `"Debug/mandelbrot.exe"` to run. Note that the instruction set is SSE2 (the default) because MSVC does not have the equivalent of `-march=native`, so you should add the relevant [`/arch`](https://learn.microsoft.com/en-us/cpp/build/reference/arch-minimum-cpu-architecture) for your CPU if you want extra performance. **IMPORTANT:** You will probably have to change the ImageMagick version. It's currently set to `ImageMagick-7.1.2-Q16-HDRI`, which is the current version and recommended setup as of writing. If you are using ImageMagick 6 (why), add `/DUSE_IM6`.
+
+`/fp:fast` in theory *should* be okay to add, as float precision is not really an issue, however it started producing some really wrong results for me. Maybe an MSVC update changed it, or maybe the wrong-looking result is the flag actually working. Feel free to experiment.
 
 ## Optional Coloring File
 
