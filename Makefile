@@ -1,6 +1,6 @@
 CXX = g++
 TARGET = mandelbrot.out
-CXXFLAGS = -std=c++20 -march=native -O3 -ffast-math
+CXXFLAGS = -std=c++20 -march=native -O3 -ffast-math -Wno-deprecated-declarations
 # O3 *slightly* faster than O2, and Ofast is probably completely fine
 MAGICK_FLAGS = $(shell pkg-config --cflags --libs Magick++)
 CXXFLAGS += -DMANDELBROT_ITER_SMALL_VAL=32 -DMANDELBROT_ITER_INCR=32

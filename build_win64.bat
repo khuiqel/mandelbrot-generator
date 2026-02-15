@@ -1,6 +1,7 @@
 setlocal
 
 @REM "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+@REM "Debug/mandelbrot.exe" 6 -2 1 -1.25 1.25 3000 2500 test.png
 
 @set OUT_DIR=Debug
 @set OUT_EXE=mandelbrot
