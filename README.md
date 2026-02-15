@@ -19,7 +19,7 @@ Just run `make`. **IMPORTANT:** If you're using ImageMagick 7, you must remove `
 * If you compiled ImageMagick from source, you'll probably have to change `MAGICK_FLAGS` in the Makefile to have the include directory and link the Magick++ library, because `pkg-config` might not be able to find it.
 * If you are using Clang but encounter `/usr/bin/ld: cannot find -lomp: No such file or directory`, you're missing the OpenMP development package: `sudo apt install libomp-dev`. Clang was noticeably slower in my testing, so I recommend GCC.
 * By default, the image is constrained to 8-bit color depth. (ImageMagick seems to automatically lower the bit depth if it's safe to do so.) If you want to use the default bitdepth your version of ImageMagick was compiled with, add `-DAUTO_BITDEPTH` to the Makefile. If you want something custom, manually edit the line. This change was made to produce smaller filesizes while typically looking identical.
-* `-march=native` is enabled by default. Remove it from the Makefile if you don't want it.
+* `-march=native` and `-mtune=native` are enabled by default. Remove them from the Makefile if you don't want them.
 * There are some `#define`s available to slightly tune the core loop if you so desire: `MANDELBROT_ITER_SMALL_VAL` determines how long to do precise iterations, and `MANDELBROT_ITER_INCR` determines how many iterations to do at once after that (to take advantage of CPUs' long pipelines before jumping back to the start of the loop). Changing these will result in an identical image, so don't worry about playing around.
 * Optionally, you can increase float precision used when calculating: change `typedef float c_float;` to `typedef double c_float;`.
 
@@ -45,7 +45,7 @@ In my testing I discovered BMP images to be the fastest to make and AVIF to be t
 
 ## Building (Windows)
 
-Only MSVC x64 is officially supported. Set your environment variables with `"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"`, run `build_win64.bat` to build, `"Debug/mandelbrot.exe"` to run. Note that the instruction set is SSE2 (the default) because MSVC does not have the equivalent of `-march=native`, so you should add the relevant [`/arch`](https://learn.microsoft.com/en-us/cpp/build/reference/arch-minimum-cpu-architecture) for your CPU if you want extra performance. **IMPORTANT:** You will probably have to change the ImageMagick version. It's currently set to `ImageMagick-7.1.2-Q16-HDRI`, which is the current version and recommended setup as of writing. If you are using ImageMagick 6 (why), add `/DUSE_IM6`. If you want to use ImageMagick's default bitdepth instead of 8-bit, add `/DAUTO_BITDEPTH`.
+Only MSVC x64 is officially supported. Set your environment variables with `"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"`, run `build_win64.bat` to build, `"Debug/mandelbrot.exe"` to run. Note that the instruction set is SSE2 (the default) because MSVC does not have the equivalent of `-march=native` (or `-mtune=native`), so you should add the relevant [`/arch`](https://learn.microsoft.com/en-us/cpp/build/reference/arch-minimum-cpu-architecture) for your CPU if you want extra performance. **IMPORTANT:** You will probably have to change the ImageMagick version. It's currently set to `ImageMagick-7.1.2-Q16-HDRI`, which is the current version and recommended setup as of writing. If you are using ImageMagick 6 (why), add `/DUSE_IM6`. If you want to use ImageMagick's default bitdepth instead of 8-bit, add `/DAUTO_BITDEPTH`.
 
 `/fp:fast` in theory *should* be okay to add, as float precision is not really an issue, however it started producing some really wrong results for me. Maybe an MSVC update changed it, or maybe the wrong-looking result is the flag actually working. Feel free to experiment.
 
@@ -93,7 +93,7 @@ Now that the bottleneck was the calculation (or perceived to be), I had to look 
 
 Someone else had already written a much better library than I could've come up with, and it was extremely easy to add. Now that the threads were far more efficiently utilized, the computation part ran ~2x faster! I don't think enkiTS allows threads to steal work from each other, but that's okay for this use case.
 
-I also added `-march=native` to the Makefile and switched from `-O2` to `-O3` for a smidgen of extra performace. Not a big difference, but free performance is free performance.
+I also added `-march=native` (and much later `-mtune=native`) to the Makefile and switched from `-O2` to `-O3` for a smidgen of extra performace. Not a big difference, but free performance is free performance.
 
 ## Color accuracy rewrite
 
@@ -120,6 +120,8 @@ TL;DR: Put more compute in loop to run the loop less to get better performance. 
 There are new defines added: `MANDELBROT_ITER_SMALL_VAL` for the initial precise counting, and `MANDELBROT_ITER_INCR` for how many iterations to run at once after that. If it overshoots, it will wind back and do precise iteration to give an identical image as before. If you really want, you could get slightly better performance by removing the "wind back" feature, however the image will be *slightly* different.
 
 From here, I really don't think there are any easy gains left. I tried adding [rpmalloc](https://github.com/mjansson/rpmalloc) just to see if it could give a little boost, but this program is execution-bound, not memory allocation-bound, so it didn't. I also tried running [Tracy](https://github.com/wolfpld/tracy) and [GPROF](https://en.wikipedia.org/wiki/Gprof), but they didn't reveal anything useful. At best, a library for SIMD instructions (or C++26's `<simd>`) could be smarter than what the compiler normally generates, but otherwise I'll call this as optimized as it can be.
+
+(Except I forgot `-mtune=native`. Adding that gave ~2% performance increase. *Now* it's as optimized as it can be.)
 
 # License
 
